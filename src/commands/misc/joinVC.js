@@ -1,7 +1,6 @@
-const embed = require('../../utils/createEmbed');
-const yrdl = require('ytdl-core');
 const {Client, Interaction, ChannelType} = require('discord.js');
 const {joinVoiceChannel, createAudioPlayer, createAudioResource} = require('@discordjs/voice');
+const embed = require('../../utils/createEmbed');
 
 
 module.exports = {
@@ -11,27 +10,29 @@ module.exports = {
     */
 
     callback: async (client, interaction) => {
-        const channel = interaction.member.voice.channelId;
-
-        if(!channel) return interaction.reply('You should be in voice channel');
+        const userChannel = interaction.member.voice.channelId;
+        const enterChannel = interaction.options.getChannel('voice-channel').id;
+        
+        //if(!userChannel) return interaction.reply('You should be in voice channel');
 
         try {
             const connect = joinVoiceChannel(
                 {
-                    channelId: channel,
+                    channelId: enterChannel,
                     guildId: interaction.guildId,
                     adapterCreator: interaction.guild.voiceAdapterCreator
                 }
             )
+
             const player = createAudioPlayer();
-
-            const resource = yrdl('https://www.youtube.com/watch?v=IvumMzOTUPY&ab_channel=Dr.FeelGood%7BMalusThantos%7D');
-
+            
+            const resource = createAudioResource(`../content/audio/Enter.wav`);
             connect.subscribe(player);
 
             player.play(resource);
 
-            return
+
+            return interaction.reply('Correct');
             
         } catch (error) {
             interaction.reply(`Error: ${error}`);
@@ -43,7 +44,7 @@ module.exports = {
     description: 'Add Jarvis to voice channel',
     options: [
         {
-            name: 'voicechannel',
+            name: 'voice-channel',
             description: 'Enter chosen voice channel',
             type: 7,
             required: true,

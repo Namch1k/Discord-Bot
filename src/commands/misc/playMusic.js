@@ -1,6 +1,6 @@
 const {Client, Interaction, ApplicationCommandOptionType} = require('discord.js');
-const yrdl = require('ytdl-core');
 const {joinVoiceChannel, createAudioPlayer, createAudioResource} = require('@discordjs/voice');
+const play = require('play-dl');
 const embed = require('../../utils/createEmbed');
 
 
@@ -15,22 +15,37 @@ module.exports = {
 
         if(!channel) return interaction.reply('You should be in voice chat');
 
+
         try {
             const connect = joinVoiceChannel(
                 {
                     channelId: channel,
-                    guildId: interaction.guild,
+                    guildId: interaction.guildId,
                     adapterCreator: interaction.guild.voiceAdapterCreator
                 }
             )
 
             const player = createAudioPlayer();
+            const source = interaction.options.getString('url-link');
+            const audio = await play.stream(source);
 
-            const resource = createAudioResource(interaction.options.getString('url-link'));
+            const videoInfo = await play.video_info(source);
+
+            const resource = createAudioResource(audio.stream, {inputType: audio.type});
 
             connect.subscribe(player);
+            player.play(resource);          
 
-            player.play(resource);
+            return interaction.reply(
+                {
+                 embeds: [embed('Now play', `${videoInfo.video_details.channel} - ${videoInfo.video_details.title}\n\nTime\n[0:00/${videoInfo.video_details.durationRaw}]`)
+                    .setURL(source)
+                    .setThumbnail(videoInfo.video_details.thumbnails[3].url)
+                    .setColor('Red')
+                    .setFooter({text: `Requested by: @${interaction.user.username}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true })})],
+                 ephemeral: false
+                }
+            );
 
         } catch (error) {
             interaction.reply(`Error: ${error}`);
@@ -44,7 +59,7 @@ module.exports = {
             name: 'url-link',
             description: 'Add URL link',
             type:ApplicationCommandOptionType.String,
-            //required: true,
+            required: true,
         }
     ]
 }

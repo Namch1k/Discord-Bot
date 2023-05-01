@@ -10,7 +10,7 @@ const config = new Configuration(
 
 const openai = new OpenAIApi(config);
 
-module.exports = {
+ module.exports = {
     /**
      * @param {Client} client 
      * @param {Interaction} interaction
